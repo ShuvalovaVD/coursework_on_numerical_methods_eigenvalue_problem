@@ -23,8 +23,10 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
     Для реализации QR-разложения используется процесс Грама-Шмидта.
     Далее в комментариях будет описан ход этого процесса.
     '''
+
     m, n = len(matrix_a), len(matrix_a[0])  # количество строк и столбцов соответственно
     vector_columns = [[matrix_a[i][j] for i in range(m)] for j in range(n)]  # вектор-столбцы a_1, a_2, ..., a_n
+
     # для вектор-столбцов a_1, a_2, ..., a_n нужно получить систему ортогональных векторов b_1, b_2, ..., b_n
     # система ортогональных векторов - это система векторов, где все векторы попарно ортогональны, т.е. перпендикулярны
     orthogonal_vectors = [vector_columns[0]]  # b_1 = a_1
@@ -45,6 +47,7 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
             projections_b_j.append(proj_b_i_a_j)
         b_j = [a_j[i] - sum([projections_b_j[k][i] for k in range(j)]) for i in range(m)]
         orthogonal_vectors.append(b_j)
+
     # из ортогональных векторов b_1, b_2, ..., b_n нужно получить нормированные векторы e_1, e_2, ..., e_n
     # нормированный (единичный) вектор - это вектор единичной длины, он получается делением вектора на его норму
     # e_j = b_j / ||b_j||, где ||b_j|| - норма вектора, ||b_j|| = sqrt(sum(elem_b_j**2)) для 1 <= j <= n
@@ -54,18 +57,33 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
         b_j_norm = sum([elem ** 2 for elem in b_j]) ** 0.5
         e_j = [elem / b_j_norm for elem in b_j]
         normed_vectors.append(e_j)
+
+    # теперь найдем ортогональную матрицу matrix_q и верхнетреугольную матрицу matrix_r
+    # ортогональная матрица - это квадратная матрица с вещественными элементами, результат умножения которой на
+    # транспонированную матрицу равен единичной матрице:
+    # matrix_q * matrix_q_transposed = matrix_q_transposed * matrix_q = E
+    # верхнетреугольная матрица - это матрица, у которой все элементы, стоящие ниже главной диагонали, равны 0
+
     # столбцы ортогональной матрицы matrix_q формируются из векторов e_j для 1 <= j <= n
     matrix_q = [[normed_vectors[j][i] for j in range(n)] for i in range(m)]  # её размеры: m x n
+
     # найдем верхнетреугольную матрицу matrix_r из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_q ** (-1) слева
     # тгд: matrix_q ** (-1) * matrix_a = matrix_q ** (-1) * matrix_q * matrix_r
-    # учитывая, что: matrix_q ** (-1) * matrix_q = E - единичная матрица => E * matrix_r = matrix_r
+    # учитывая, что: matrix_q ** (-1) * matrix_q = E, где E - единичная матрица => E * matrix_r = matrix_r
     # получаем: matrix_r = matrix_q ** (-1) * matrix_a
     # чтобы не искать обратную матрицу matrix_q ** (-1), можно воспользоваться св-вом ортогональной матрицы matrix_q:
     # matrix_q ** (-1) = matrix_q_transposed, где matrix_q_transposed - транспонированная матрица
     # тгд верхнетреугольную матрицу matrix_r получаем по ф-ле: matrix_r = matrix_q_transposed * matrix_a
     matrix_q_transposed = [[matrix_q[i][j] for i in range(m)] for j in range(n)]
-    matrix_r = multiply_two_matrices(matrix_q_transposed, matrix_a)
+    matrix_r = multiply_two_matrices(matrix_q_transposed, matrix_a)  # её размеры: n x n
+
+    # ??? - можно ли ставить нули
+    # у получившейся верхнетреугольной матрицы matrix_r все элементы ниже главной диагонали должны быть = 0,
+    # но из-за неточности представления вещественных чисел в бинарном коде там очень малые значения порядка e-16,
+    # поэтому обнулим их, чтобы эти погрешности не влияли на дальнейшие результаты
+    matrix_r = [[0 if i > j else matrix_r[i][j] for j in range(n)] for i in range(n)]
+
     return matrix_q, matrix_r
 
 
