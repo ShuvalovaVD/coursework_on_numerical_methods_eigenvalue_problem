@@ -87,9 +87,17 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
     return matrix_q, matrix_r
 
 
-a = [[1, 2, 4], [3, 3, 2], [4, 1, 3]]
-q, r = qr_decomposition(a)
-print('Q:')
-for elem in q: print(elem)
-print('R:')
-for elem in r: print(elem)
+def qr_algorithm(matrix_a):
+    """Функция осуществляет QR-алгоритм"""
+
+    iters = 100
+    for i in range(iters):
+        matrix_q, matrix_r = qr_decomposition(matrix_a)
+        matrix_a = multiply_two_matrices(matrix_r, matrix_q)
+    print("A:")
+    for elem in matrix_a:
+        print(*elem)
+
+
+a = [[7, 2, -2], [4, 5, -2], [0, 0, 3]]
+qr_algorithm(a)
