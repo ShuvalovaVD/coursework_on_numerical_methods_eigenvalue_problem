@@ -29,6 +29,7 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
     Для реализации QR-разложения используется процесс Грама-Шмидта.
     Далее в комментариях будет описан ход этого процесса.
     '''
+    # условие применения, условие и скорость сходимости - ?
 
     n = len(matrix_a)  # количество строк и столбцов соответственно, предполагается, что матрица квадратная
     vector_columns = [[matrix_a[i][j] for i in range(n)] for j in range(n)]  # вектор-столбцы a_1, a_2, ..., a_n
@@ -88,6 +89,8 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
 
 
 def qr_decomposition_givens_turn(matrix_a):
+    # условие применения, условие и скорость сходимости - ?
+
     n = len(matrix_a)
     matrix_r = matrix_a.copy()
     g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
@@ -112,6 +115,7 @@ def qr_decomposition_givens_turn(matrix_a):
 
 def qr_algorithm(matrix_a, eps):
     """Функция осуществляет QR-алгоритм"""
+    # условие применения, условие и скорость сходимости - ?
 
     n = len(matrix_a)
     iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
@@ -133,6 +137,7 @@ def qr_algorithm(matrix_a, eps):
         print(*elem)
 
 
+# условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
 a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
 eps = 1 / 10 ** 15
 qr_algorithm(a, eps)
