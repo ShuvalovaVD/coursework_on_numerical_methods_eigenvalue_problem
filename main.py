@@ -1,15 +1,13 @@
 '''
 ДОДЕЛАТЬ:
-1) нахождение собственных векторов (узнать у Кувайсковой как)
-2) подкорректировать размеры матриц: собственные значения и собственные векторы есть только у квадратных матриц
-3) сделать заданную точность и сходимость
+1) нахождение собственных векторов - решаем слау, можно методом Гаусса
 4) QR-разложение по методам: Преобразование Хаусхолдера, Поворот Гивенса
 '''
 
 def multiply_two_matrices(matrix_a, matrix_b):
     """
-    Умножает две матрицы matrix_a и matrix_b друг на друга и возвращает итоговую матрицу matrix_c.
-    Предполагается, что умножение матриц определено, то есть кол-во столбцов matrix_a = кол-ву строк matrix_b.
+    Вспомогательная функция. Умножает две матрицы matrix_a и matrix_b друг на друга и возвращает итоговую матрицу
+    matrix_c. Предполагается, что умножение матриц определено, то есть кол-во столбцов matrix_a = кол-ву строк matrix_b.
     """
     # размеры матриц matrix_a и matrix_b: кол-во строк и столбцов соответственно
     m_a, n_a, m_b, n_b = len(matrix_a), len(matrix_a[0]), len(matrix_b), len(matrix_b[0])  # предполагается: n_a = m_b
@@ -24,7 +22,7 @@ def multiply_two_matrices(matrix_a, matrix_b):
     return matrix_c
 
 
-def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТРИЦ: m = n
+def qr_decomposition_gram_schmidt_process(matrix_a):
     '''
     Функция осуществляет QR-разложение вещественной матрицы matrix_a на ортогональную матрицу matrix_q
     и верхнетреугольную матрицу matrix_r: matrix_a = matrix_q * matrix_r.
@@ -32,8 +30,8 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
     Далее в комментариях будет описан ход этого процесса.
     '''
 
-    m, n = len(matrix_a), len(matrix_a[0])  # количество строк и столбцов соответственно
-    vector_columns = [[matrix_a[i][j] for i in range(m)] for j in range(n)]  # вектор-столбцы a_1, a_2, ..., a_n
+    n = len(matrix_a)  # количество строк и столбцов соответственно, предполагается, что матрица квадратная
+    vector_columns = [[matrix_a[i][j] for i in range(n)] for j in range(n)]  # вектор-столбцы a_1, a_2, ..., a_n
 
     # для вектор-столбцов a_1, a_2, ..., a_n нужно получить систему ортогональных векторов b_1, b_2, ..., b_n
     # система ортогональных векторов - это система векторов, где все векторы попарно ортогональны, т.е. перпендикулярны
@@ -48,12 +46,12 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
         projections_b_j = []  # посчитаем для b_j проекции proj_b_1_a_j, proj_b_2_a_j, ..., proj_b_j-1_a_j
         for i in range(j):
             b_i = orthogonal_vectors[i]
-            scal_a_j_b_i = sum([a_j[k] * b_i[k] for k in range(m)])
-            scal_b_i_b_i = sum([b_i[k] * b_i[k] for k in range(m)])
+            scal_a_j_b_i = sum([a_j[k] * b_i[k] for k in range(n)])
+            scal_b_i_b_i = sum([b_i[k] * b_i[k] for k in range(n)])
             scal_mult = scal_a_j_b_i / scal_b_i_b_i
             proj_b_i_a_j = [scal_mult * elem for elem in b_i]
             projections_b_j.append(proj_b_i_a_j)
-        b_j = [a_j[i] - sum([projections_b_j[k][i] for k in range(j)]) for i in range(m)]
+        b_j = [a_j[i] - sum([projections_b_j[k][i] for k in range(j)]) for i in range(n)]
         orthogonal_vectors.append(b_j)
 
     # из ортогональных векторов b_1, b_2, ..., b_n нужно получить нормированные векторы e_1, e_2, ..., e_n
@@ -73,7 +71,7 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
     # верхнетреугольная матрица - это матрица, у которой все элементы, стоящие ниже главной диагонали, равны 0
 
     # столбцы ортогональной матрицы matrix_q формируются из векторов e_j для 1 <= j <= n
-    matrix_q = [[normed_vectors[j][i] for j in range(n)] for i in range(m)]  # её размеры: m x n
+    matrix_q = [[normed_vectors[j][i] for j in range(n)] for i in range(n)]  # её размеры: m x n
 
     # найдем верхнетреугольную матрицу matrix_r из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_q ** (-1) слева
@@ -83,31 +81,58 @@ def qr_decomposition(matrix_a):  # ПОКА ДЛЯ КВАДРАТНЫХ МАТР
     # чтобы не искать обратную матрицу matrix_q ** (-1), можно воспользоваться св-вом ортогональной матрицы matrix_q:
     # matrix_q ** (-1) = matrix_q_transposed, где matrix_q_transposed - транспонированная матрица
     # тгд верхнетреугольную матрицу matrix_r получаем по ф-ле: matrix_r = matrix_q_transposed * matrix_a
-    matrix_q_transposed = [[matrix_q[i][j] for i in range(m)] for j in range(n)]
+    matrix_q_transposed = [[matrix_q[i][j] for i in range(n)] for j in range(n)]
     matrix_r = multiply_two_matrices(matrix_q_transposed, matrix_a)  # её размеры: n x n
-
-    # ??? - можно ли ставить нули
-    # у получившейся верхнетреугольной матрицы matrix_r все элементы ниже главной диагонали должны быть = 0,
-    # но из-за неточности представления вещественных чисел в бинарном коде там очень малые значения порядка e-16,
-    # поэтому обнулим их, чтобы эти погрешности не влияли на дальнейшие результаты
-    matrix_r = [[0 if i > j else matrix_r[i][j] for j in range(n)] for i in range(n)]
-
-    for elem in matrix_r: print(elem)  # тестовый вывод
 
     return matrix_q, matrix_r
 
 
-def qr_algorithm(matrix_a):
+def qr_decomposition_givens_turn(matrix_a):
+    n = len(matrix_a)
+    matrix_r = matrix_a.copy()
+    g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
+    for j in range(n):
+        for i in range(j + 1, n):
+            a_j, a_i = matrix_r[j][j], matrix_r[i][j]
+            c = a_j / ((a_j ** 2 + a_i ** 2) ** 0.5)
+            s = (-a_i) / ((a_j ** 2 + a_i ** 2) ** 0.5)
+            g[j][j], g[i][i] = c, c
+            g[i][j], g[j][i] = s, -s
+            matrix_r = multiply_two_matrices(g, matrix_r)
+            g[j][j], g[i][i] = 1, 1
+            g[i][j], g[j][i] = 0, 0
+
+    # найдем ортогональную матрицу matrix_q из выражения matrix_a = matrix_q * matrix_r
+    # умножим обе части этого уравнения на matrix_r ** (-1) справа
+    # тгд: matrix_a * matrix_r ** (-1) = matrix_q * matrix_r * matrix_r ** (-1)
+    # учитывая, что: matrix_r * matrix_r ** (-1) = E, где E - единичная матрица => matrix_q * E = matrix_q
+    # получаем: matrix_q = matrix_a * matrix_r ** (-1), тгд требуется найти обратную матрицу matrix_r ** (-1)
+    return matrix_r
+
+
+def qr_algorithm(matrix_a, eps):
     """Функция осуществляет QR-алгоритм"""
 
-    iters = 100
-    for i in range(iters):
-        matrix_q, matrix_r = qr_decomposition(matrix_a)
+    n = len(matrix_a)
+    iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
+    for iter in range(iters):
+        matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
+        matrix_r_extra = qr_decomposition_givens_turn(matrix_a)
+        print("iter №", iter + 1)
+        print("R - gram:")
+        for elem in matrix_r: print(elem)
+        print("R - givens:")
+        for elem in matrix_r_extra: print(elem)
+        print()
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
+        if all(abs(matrix_a[i][j]) < eps for j in range(n) for i in range(j + 1, n)):
+            print("Всего было итераций:", iter + 1)
+            break
     print("A:")
     for elem in matrix_a:
         print(*elem)
 
 
-a = [[7, 2, -2], [4, 5, -2], [0, 0, 3]]
-qr_decomposition(a)
+a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
+eps = 1 / 10 ** 15
+qr_algorithm(a, eps)
