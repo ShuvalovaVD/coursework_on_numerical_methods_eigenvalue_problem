@@ -121,13 +121,6 @@ def qr_algorithm(matrix_a, eps):
     iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
     for iter in range(iters):
         matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
-        matrix_r_extra = qr_decomposition_givens_turn(matrix_a)
-        print("iter №", iter + 1)
-        print("R - gram:")
-        for elem in matrix_r: print(elem)
-        print("R - givens:")
-        for elem in matrix_r_extra: print(elem)
-        print()
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
         if all(abs(matrix_a[i][j]) < eps for j in range(n) for i in range(j + 1, n)):
             print("Всего было итераций:", iter + 1)
@@ -138,6 +131,8 @@ def qr_algorithm(matrix_a, eps):
 
 
 # условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
-a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
-eps = 1 / 10 ** 15
+# a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
+# a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
+a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
+eps = 1 / 10 ** 3
 qr_algorithm(a, eps)
