@@ -1,8 +1,17 @@
+import math
 '''
 ДОДЕЛАТЬ:
 1) нахождение собственных векторов - решаем слау, можно методом Гаусса
 4) QR-разложение по методам: Преобразование Хаусхолдера, Поворот Гивенса
 '''
+
+
+def sign(x):
+    if x > 0:
+        return 1
+    if x < 0:
+        return -1
+    return 0
 
 def multiply_two_matrices(matrix_a, matrix_b):
     """
@@ -99,11 +108,11 @@ def qr_decomposition_givens_turn(matrix_a):
             a_j, a_i = matrix_r[j][j], matrix_r[i][j]
             c = a_j / ((a_j ** 2 + a_i ** 2) ** 0.5)
             s = (-a_i) / ((a_j ** 2 + a_i ** 2) ** 0.5)
-            g[j][j], g[i][i] = c, c
+            g[j][j] = g[i][i] = c
             g[i][j], g[j][i] = s, -s
             matrix_r = multiply_two_matrices(g, matrix_r)
-            g[j][j], g[i][i] = 1, 1
-            g[i][j], g[j][i] = 0, 0
+            g[j][j] = g[i][i] = 1
+            g[i][j] = g[j][i] = 0
 
     # найдем ортогональную матрицу matrix_q из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_r ** (-1) справа
@@ -122,17 +131,54 @@ def qr_algorithm(matrix_a, eps):
     for iter in range(iters):
         matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
-        if all(abs(matrix_a[i][j]) < eps for j in range(n) for i in range(j + 1, n)):
-            print("Всего было итераций:", iter + 1)
+        if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
             break
-    print("A:")
-    for elem in matrix_a:
-        print(*elem)
+    return matrix_a
+
+
+def jakobi_rotation(matrix_a, eps):
+    n = len(matrix_a)
+    while max([abs(matrix_a[i][j]) for i in range(n) for j in range(n) if i != j]) >= eps:
+        for j in range(n - 1):
+            for k in range(j + 1, n):
+                if abs(matrix_a[j][k]) < eps:
+                    continue
+                # составим матрицу вращения matrix_j
+                if matrix_a[j][j] == matrix_a[k][k]:
+                    theta = math.pi / 4
+                    c = math.cos(theta)
+                    s = math.sin(theta)
+                else:
+                    tau = (matrix_a[j][j] - matrix_a[k][k]) / (2 * matrix_a[j][k])
+                    t = sign(tau) / (abs(tau) + (1 + tau ** 2) ** 0.5)
+                    c = 1 / ((1 + t ** 2) ** 0.5)
+                    s = t * c
+                matrix_j = [[1 if ii == jj else 0 for jj in range(n)] for ii in range(n)]
+                matrix_j[j][j] = matrix_j[k][k] = c
+                matrix_j[k][j], matrix_j[j][k] = s, -s
+
+                matrix_j_transpored = [[matrix_j[ii][jj] for ii in range(n)] for jj in range(n)]
+                matrix_a = multiply_two_matrices(matrix_j_transpored, matrix_a)
+                matrix_a = multiply_two_matrices(matrix_a, matrix_j)
+    return matrix_a
 
 
 # условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
-# a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
+a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
 # a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
-a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
+# a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
+# a = [[5, 1, 2], [1, 6, 2], [2, 2, 7]]  # l = 3.729, l = 4.659, l = 9.612
 eps = 1 / 10 ** 3
-qr_algorithm(a, eps)
+# qr_algorithm(a, eps)
+a_qr = qr_algorithm(a, eps)
+# a_jak = jakobi_rotation(a, eps)
+
+print("Исходная матрица:")
+for elem in a: print(elem)
+print()
+print("Ответ методом QR:")
+for elem in a_qr: print(elem)
+print()
+# print("Ответ методом Якоби:")
+# for elem in a_jak: print(elem)
+# print()
