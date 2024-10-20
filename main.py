@@ -1,8 +1,9 @@
 import math
+import numpy as np
 '''
 ДОДЕЛАТЬ:
-1) нахождение собственных векторов - решаем слау, можно методом Гаусса
-4) QR-разложение по методам: Преобразование Хаусхолдера, Поворот Гивенса
+1) нахождение собственных векторов - методом Гаусса
+4) QR-разложение по методам: Поворот Гивенса - написать самой нахождение обратной матрицы
 '''
 
 
@@ -119,7 +120,9 @@ def qr_decomposition_givens_turn(matrix_a):
     # тгд: matrix_a * matrix_r ** (-1) = matrix_q * matrix_r * matrix_r ** (-1)
     # учитывая, что: matrix_r * matrix_r ** (-1) = E, где E - единичная матрица => matrix_q * E = matrix_q
     # получаем: matrix_q = matrix_a * matrix_r ** (-1), тгд требуется найти обратную матрицу matrix_r ** (-1)
-    return matrix_r
+    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()
+    matrix_q = multiply_two_matrices(matrix_a, matrix_r_inv)
+    return matrix_q, matrix_r
 
 
 def qr_algorithm(matrix_a, eps):
@@ -129,7 +132,7 @@ def qr_algorithm(matrix_a, eps):
     n = len(matrix_a)
     iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
     for iter in range(iters):
-        matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
+        matrix_q, matrix_r = qr_decomposition_givens_turn(matrix_a)
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
             break
@@ -164,21 +167,58 @@ def jakobi_rotation(matrix_a, eps):
 
 
 # условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
-a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
-# a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
+# a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
+a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
 # a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
 # a = [[5, 1, 2], [1, 6, 2], [2, 2, 7]]  # l = 3.729, l = 4.659, l = 9.612
 eps = 1 / 10 ** 3
-# qr_algorithm(a, eps)
 a_qr = qr_algorithm(a, eps)
 # a_jak = jakobi_rotation(a, eps)
 
 print("Исходная матрица:")
 for elem in a: print(elem)
 print()
+ls = []  # собственные значения
 print("Ответ методом QR:")
-for elem in a_qr: print(elem)
+for i in range(len(a)):
+    for j in range(len(a)):
+        if i == j:
+            l = round(a_qr[i][j], 3)
+            ls.append(l)
+            print(f"L_{i + 1} = {l}")
+
 print()
 # print("Ответ методом Якоби:")
-# for elem in a_jak: print(elem)
+# for i in range(len(a)):
+#     for j in range(len(a)):
+#         if i == j:
+#             print(f"L_{i + 1} = {round(a_qr[i][j], 3)}")
 # print()
+
+def gauss_elimination(matrix, b):
+    n = len(matrix)
+    # Объединяем матрицу и вектор b в расширенную матрицу
+    for i in range(n):
+        matrix[i].append(b[i])
+    for ii in range(n):
+        elem_to_zero = matrix[ii][ii]
+        if elem_to_zero == 0:
+            continue
+        for i in range(ii + 1, n):
+            mult = (-matrix[i][ii] / elem_to_zero)
+            for j in range(n + 1):
+                matrix[i][j] += matrix[ii][j] * mult
+
+    print("Матрица после преобразований Гаусса:")
+    for row in matrix: print(*row)
+    print()
+
+
+# Пример использования
+A = [
+    [2 - ls[1], 1, 1],
+    [1, 2 - ls[1], 1],
+    [1, 1, 2 - ls[1]]
+]
+b = [0, 0, 0]
+gauss_elimination(A, b)
