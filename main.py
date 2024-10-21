@@ -2,25 +2,33 @@ import math
 import numpy as np
 '''
 ДОДЕЛАТЬ:
-1) нахождение собственных векторов - методом Гаусса
-4) QR-разложение по методам: Поворот Гивенса - написать самой нахождение обратной матрицы
+1) метод Гаусса - доделать
+2) написать комментарии для всего кода, где они не написаны
+3) написать всю обёртку
+4) поворот Гивенса - обратная матрица: самостоятельно находить без numpy
 '''
 
 
 def sign(x):
+    """
+    Вспомогательная функция: математическая функция sign(x).
+    """
     if x > 0:
         return 1
     if x < 0:
         return -1
     return 0
 
+
 def multiply_two_matrices(matrix_a, matrix_b):
     """
-    Вспомогательная функция. Умножает две матрицы matrix_a и matrix_b друг на друга и возвращает итоговую матрицу
-    matrix_c. Предполагается, что умножение матриц определено, то есть кол-во столбцов matrix_a = кол-ву строк matrix_b.
+    Вспомогательная функция: умножает матрицы matrix_a и matrix_b друг на друга и возвращает итоговую матрицу matrix_c.
     """
     # размеры матриц matrix_a и matrix_b: кол-во строк и столбцов соответственно
-    m_a, n_a, m_b, n_b = len(matrix_a), len(matrix_a[0]), len(matrix_b), len(matrix_b[0])  # предполагается: n_a = m_b
+    m_a, n_a, m_b, n_b = len(matrix_a), len(matrix_a[0]), len(matrix_b), len(matrix_b[0])
+    if n_a != m_b:  # проверка на определённость операции умножения: кол-во столбцов matrix_a = кол-ву строк matrix_b
+        print("Умножение матриц неопределено")
+        exit()
     m_c, n_c = m_a, n_b  # размеры итоговой матрицы matrix_c: кол-во строк и столбцов соответственно
     matrix_c = []  # создадим матрицу matrix_c, заполненную нулями
     for i in range(m_c): matrix_c.append([0] * n_c)
@@ -35,15 +43,11 @@ def multiply_two_matrices(matrix_a, matrix_b):
 def qr_decomposition_gram_schmidt_process(matrix_a):
     '''
     Функция осуществляет QR-разложение вещественной матрицы matrix_a на ортогональную матрицу matrix_q
-    и верхнетреугольную матрицу matrix_r: matrix_a = matrix_q * matrix_r.
-    Для реализации QR-разложения используется процесс Грама-Шмидта.
-    Далее в комментариях будет описан ход этого процесса.
+    и верхнетреугольную матрицу matrix_r: matrix_a = matrix_q * matrix_r. Для реализации QR-разложения используется
+    процесс Грама-Шмидта. Далее в комментариях будет описан ход этого процесса.
     '''
-    # условие применения, условие и скорость сходимости - ?
-
-    n = len(matrix_a)  # количество строк и столбцов соответственно, предполагается, что матрица квадратная
+    n = len(matrix_a)  # размер матрицы, предполагается, что она квадратная
     vector_columns = [[matrix_a[i][j] for i in range(n)] for j in range(n)]  # вектор-столбцы a_1, a_2, ..., a_n
-
     # для вектор-столбцов a_1, a_2, ..., a_n нужно получить систему ортогональных векторов b_1, b_2, ..., b_n
     # система ортогональных векторов - это система векторов, где все векторы попарно ортогональны, т.е. перпендикулярны
     orthogonal_vectors = [vector_columns[0]]  # b_1 = a_1
@@ -64,7 +68,6 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
             projections_b_j.append(proj_b_i_a_j)
         b_j = [a_j[i] - sum([projections_b_j[k][i] for k in range(j)]) for i in range(n)]
         orthogonal_vectors.append(b_j)
-
     # из ортогональных векторов b_1, b_2, ..., b_n нужно получить нормированные векторы e_1, e_2, ..., e_n
     # нормированный (единичный) вектор - это вектор единичной длины, он получается делением вектора на его норму
     # e_j = b_j / ||b_j||, где ||b_j|| - норма вектора, ||b_j|| = sqrt(sum(elem_b_j**2)) для 1 <= j <= n
@@ -74,16 +77,13 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
         b_j_norm = sum([elem ** 2 for elem in b_j]) ** 0.5
         e_j = [elem / b_j_norm for elem in b_j]
         normed_vectors.append(e_j)
-
     # теперь найдем ортогональную матрицу matrix_q и верхнетреугольную матрицу matrix_r
     # ортогональная матрица - это квадратная матрица с вещественными элементами, результат умножения которой на
     # транспонированную матрицу равен единичной матрице:
     # matrix_q * matrix_q_transposed = matrix_q_transposed * matrix_q = E
     # верхнетреугольная матрица - это матрица, у которой все элементы, стоящие ниже главной диагонали, равны 0
-
     # столбцы ортогональной матрицы matrix_q формируются из векторов e_j для 1 <= j <= n
-    matrix_q = [[normed_vectors[j][i] for j in range(n)] for i in range(n)]  # её размеры: m x n
-
+    matrix_q = [[normed_vectors[j][i] for j in range(n)] for i in range(n)]
     # найдем верхнетреугольную матрицу matrix_r из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_q ** (-1) слева
     # тгд: matrix_q ** (-1) * matrix_a = matrix_q ** (-1) * matrix_q * matrix_r
@@ -93,14 +93,11 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
     # matrix_q ** (-1) = matrix_q_transposed, где matrix_q_transposed - транспонированная матрица
     # тгд верхнетреугольную матрицу matrix_r получаем по ф-ле: matrix_r = matrix_q_transposed * matrix_a
     matrix_q_transposed = [[matrix_q[i][j] for i in range(n)] for j in range(n)]
-    matrix_r = multiply_two_matrices(matrix_q_transposed, matrix_a)  # её размеры: n x n
-
+    matrix_r = multiply_two_matrices(matrix_q_transposed, matrix_a)
     return matrix_q, matrix_r
 
 
 def qr_decomposition_givens_turn(matrix_a):
-    # условие применения, условие и скорость сходимости - ?
-
     n = len(matrix_a)
     matrix_r = matrix_a.copy()
     g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
@@ -114,25 +111,22 @@ def qr_decomposition_givens_turn(matrix_a):
             matrix_r = multiply_two_matrices(g, matrix_r)
             g[j][j] = g[i][i] = 1
             g[i][j] = g[j][i] = 0
-
     # найдем ортогональную матрицу matrix_q из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_r ** (-1) справа
     # тгд: matrix_a * matrix_r ** (-1) = matrix_q * matrix_r * matrix_r ** (-1)
     # учитывая, что: matrix_r * matrix_r ** (-1) = E, где E - единичная матрица => matrix_q * E = matrix_q
     # получаем: matrix_q = matrix_a * matrix_r ** (-1), тгд требуется найти обратную матрицу matrix_r ** (-1)
-    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()
+    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()  # !!!
     matrix_q = multiply_two_matrices(matrix_a, matrix_r_inv)
     return matrix_q, matrix_r
 
 
 def qr_algorithm(matrix_a, eps):
     """Функция осуществляет QR-алгоритм"""
-    # условие применения, условие и скорость сходимости - ?
-
     n = len(matrix_a)
     iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
     for iter in range(iters):
-        matrix_q, matrix_r = qr_decomposition_givens_turn(matrix_a)
+        matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
             break
@@ -168,57 +162,110 @@ def jakobi_rotation(matrix_a, eps):
 
 # условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
 # a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
-a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
 # a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
 # a = [[5, 1, 2], [1, 6, 2], [2, 2, 7]]  # l = 3.729, l = 4.659, l = 9.612
-eps = 1 / 10 ** 3
-a_qr = qr_algorithm(a, eps)
+
+# a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
+# eps = 1 / 10 ** 3
+# a_qr = qr_algorithm(a, eps)  # для qr-разложения используется процесс Грама-Шмидта
 # a_jak = jakobi_rotation(a, eps)
 
-print("Исходная матрица:")
-for elem in a: print(elem)
-print()
-ls = []  # собственные значения
-print("Ответ методом QR:")
-for i in range(len(a)):
-    for j in range(len(a)):
-        if i == j:
-            l = round(a_qr[i][j], 3)
-            ls.append(l)
-            print(f"L_{i + 1} = {l}")
-
-print()
+# print("Исходная матрица:")
+# for elem in a: print(elem)
+# print()
+#
+# ls_qr = []  # собственные значения
+# print("Ответ методом QR:")
+# for i in range(len(a)):
+#     for j in range(len(a)):
+#         if i == j:
+#             l = round(a_qr[i][j], 3)
+#             ls_qr.append(l)
+#             print(f"L_{i + 1} = {l}")
+# for row in a_qr:
+#     print(row)
+# print()
+# ls_jak = []  # собственные значения
 # print("Ответ методом Якоби:")
 # for i in range(len(a)):
 #     for j in range(len(a)):
 #         if i == j:
-#             print(f"L_{i + 1} = {round(a_qr[i][j], 3)}")
-# print()
+#             l = round(a_jak[i][j], 3)
+#             ls_jak.append(l)
+#             print(f"L_{i + 1} = {l}")
+# for row in a_jak:
+#     print(row)
 
-def gauss_elimination(matrix, b):
-    n = len(matrix)
-    # Объединяем матрицу и вектор b в расширенную матрицу
-    for i in range(n):
-        matrix[i].append(b[i])
-    for ii in range(n):
-        elem_to_zero = matrix[ii][ii]
-        if elem_to_zero == 0:
-            continue
+
+def gauss_method(matrix_a, b):
+    """ Метод Гаусса """
+    n = len(matrix_a)
+    for i in range(n):  # объединяем матрицу matrix_a и вектор свободных членов b в расширенную матрицу
+        matrix_a[i].append(b[i])
+    # прямой ход: приводим расширенную матрицу matrix_a к верхнетреугольному виду
+    for ii in range(n):  # будем обнулять неизвестную x_ii, для этого найдём строку, в к-рой x_ii != 0
+        ind_row_x_ii = ii  # индекс строки, в которой x_ii != 0, изначально предполагаем, что такая x_ii в iiой строке
         for i in range(ii + 1, n):
-            mult = (-matrix[i][ii] / elem_to_zero)
+            if abs(matrix_a[i][ii]) > abs(matrix_a[ind_row_x_ii][ii]):  # будем искать строку, в к-рой x_ii max по abs
+                ind_row_x_ii = i
+        # меняем строки с индексами ind_row_x_ii и ii, чтобы такая x_ii стояла в строке с индексом ii
+        matrix_a[ii], matrix_a[ind_row_x_ii] = matrix_a[ind_row_x_ii], matrix_a[ii]
+        elem_to_zero = matrix_a[ii][ii]  # обозначим такую x_ii за elem_to_zero
+        if elem_to_zero == 0:  # если обнулять оказалось нечего, то пропускаем эту x_ii
+            continue
+        for i in range(ii + 1, n):  # для обнуления эл-та elem_to_zero в последующих строках нужно к этим строкам
+            mult = -matrix_a[i][ii] / elem_to_zero  # прибавлять строку, в к-рой есть elem_to_zero, умноженную на mult
             for j in range(n + 1):
-                matrix[i][j] += matrix[ii][j] * mult
+                matrix_a[i][j] += matrix_a[ii][j] * mult
 
-    print("Матрица после преобразований Гаусса:")
-    for row in matrix: print(*row)
-    print()
+    for row in matrix_a: print(row)
+
+    # определяем совместность и несовместность СЛАУ
+    flag_matrix_a = "совместная"
+    for i in range(n):
+        if all(matrix_a[i][j] == 0 for j in range(n)) and matrix_a[i][n] != 0:
+            flag_matrix_a = "несовместная"
+            break
+    if flag_matrix_a == "несовместная":
+        print("СЛАУ не имеет решений")
+        exit()
+    # если система совместна - её определённость и неопределённость
+    flag_matrix_a = "определённая"
+    for i in range(n):
+        if all(matrix_a[i][j] == 0 for j in range(n)) and matrix_a[i][n] == 0:
+            flag_matrix_a = "неопределённая"
+            break
+
+    vector_column_x = [None] * n
+    if flag_matrix_a == "определённая":  # => СЛАУ имеет 1 реш. - начинаем обратный ход: вычисляем значения неизвестных
+        print("СЛАУ имеет одно решение")
+        for i in range(n - 1, -1, -1):
+            mult = matrix_a[i][i]
+            s = 0
+            for j in range(i + 1, n):
+                s += matrix_a[i][j] * vector_column_x[j]
+            vector_column_x[i] = (matrix_a[i][n] - s) / mult
+    else:  # flag_matrix_a == "неопределённая" => СЛАУ имеет бесконечно много решений - обратный ход реализован сложнее
+        print("СЛАУ имеет бесконечно много решений")
+        """
+        ВСПОМНИТЬ ИДЕЮ!!!
+        """
+    return vector_column_x
 
 
-# Пример использования
-A = [
-    [2 - ls[1], 1, 1],
-    [1, 2 - ls[1], 1],
-    [1, 1, 2 - ls[1]]
-]
-b = [0, 0, 0]
-gauss_elimination(A, b)
+# A = [
+#     [2 - 4, 1, 1],
+#     [1, 2 - 4, 1],
+#     [1, 1, 2 - 4]
+# ]
+# b = [0, 0, 0]
+# print(gauss_method(A, b))
+
+# ЗАПУСТИТЬ НА ПРИМЕРЕ, ЧТОБЫ ВСПОМНИТЬ ИДЕЮ!!!
+# A = [
+#     [0, 0, 1],
+#     [0, 1, 1],
+#     [0, 1, 1]
+# ]
+# b = [5, 6, 6]
+# print(gauss_method(A, b))
