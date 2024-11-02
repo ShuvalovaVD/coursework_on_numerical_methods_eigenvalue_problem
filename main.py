@@ -1,11 +1,10 @@
 import math
-import numpy as np
+import numpy as np  # нужно для вычисления обратной матрицы
+import prettytable
 '''
 ДОДЕЛАТЬ:
-1) метод Гаусса - доделать
 2) написать комментарии для всего кода, где они не написаны
 3) написать всю обёртку
-4) поворот Гивенса - обратная матрица: самостоятельно находить без numpy
 '''
 
 
@@ -23,12 +22,10 @@ def sign(x):
 def multiply_two_matrices(matrix_a, matrix_b):
     """
     Вспомогательная функция: умножает матрицы matrix_a и matrix_b друг на друга и возвращает итоговую матрицу matrix_c.
+    Предполагается, что умножение матриц определено: кол-во столбцов matrix_a = кол-ву строк matrix_b.
     """
     # размеры матриц matrix_a и matrix_b: кол-во строк и столбцов соответственно
-    m_a, n_a, m_b, n_b = len(matrix_a), len(matrix_a[0]), len(matrix_b), len(matrix_b[0])
-    if n_a != m_b:  # проверка на определённость операции умножения: кол-во столбцов matrix_a = кол-ву строк matrix_b
-        print("Умножение матриц неопределено")
-        exit()
+    m_a, n_a, m_b, n_b = len(matrix_a), len(matrix_a[0]), len(matrix_b), len(matrix_b[0])  # предполагается n_a = m_b
     m_c, n_c = m_a, n_b  # размеры итоговой матрицы matrix_c: кол-во строк и столбцов соответственно
     matrix_c = []  # создадим матрицу matrix_c, заполненную нулями
     for i in range(m_c): matrix_c.append([0] * n_c)
@@ -38,6 +35,19 @@ def multiply_two_matrices(matrix_a, matrix_b):
             # элемент matrix_c[i][j] равен покоординатному умножению i-ой строки matrix_a на j-ый столбцец matrix_b
             matrix_c[i][j] = sum([matrix_a[i][k] * matrix_b[k][j] for k in range(n_a)])
     return matrix_c
+
+
+def check_matrix_symmetry(matrix_a):
+    """
+    Вспомогательная функция: проверка матрицы на симметричность.
+    """
+    flag = True  # изначально считаем матрицу симметричной
+    for i in range(n):
+        for j in range(n):
+            if matrix_a[i][j] != matrix_a[j][i]:  # если встретили несимметричную пару элементов, меняем флаг
+                flag = False
+                break
+    return flag
 
 
 def qr_decomposition_gram_schmidt_process(matrix_a):
@@ -97,7 +107,7 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
     return matrix_q, matrix_r
 
 
-def qr_decomposition_givens_turn(matrix_a):
+def qr_decomposition_givens_turn(matrix_a):  # !!!
     n = len(matrix_a)
     matrix_r = matrix_a.copy()
     g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
@@ -116,24 +126,25 @@ def qr_decomposition_givens_turn(matrix_a):
     # тгд: matrix_a * matrix_r ** (-1) = matrix_q * matrix_r * matrix_r ** (-1)
     # учитывая, что: matrix_r * matrix_r ** (-1) = E, где E - единичная матрица => matrix_q * E = matrix_q
     # получаем: matrix_q = matrix_a * matrix_r ** (-1), тгд требуется найти обратную матрицу matrix_r ** (-1)
-    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()  # !!!
+    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()
     matrix_q = multiply_two_matrices(matrix_a, matrix_r_inv)
     return matrix_q, matrix_r
 
 
-def qr_algorithm(matrix_a, eps):
+def qr_algorithm(matrix_a, eps, qr_decomposition):  # !!!
     """Функция осуществляет QR-алгоритм"""
     n = len(matrix_a)
     iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
     for iter in range(iters):
-        matrix_q, matrix_r = qr_decomposition_gram_schmidt_process(matrix_a)
+        matrix_q, matrix_r = qr_decomposition(matrix_a)
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
             break
-    return matrix_a
+    eigenvalues = [matrix_a[i][i] for i in range(n)]
+    return eigenvalues
 
 
-def jakobi_rotation(matrix_a, eps):
+def jakobi_rotation(matrix_a, eps):  # !!!
     n = len(matrix_a)
     while max([abs(matrix_a[i][j]) for i in range(n) for j in range(n) if i != j]) >= eps:
         for j in range(n - 1):
@@ -153,52 +164,18 @@ def jakobi_rotation(matrix_a, eps):
                 matrix_j = [[1 if ii == jj else 0 for jj in range(n)] for ii in range(n)]
                 matrix_j[j][j] = matrix_j[k][k] = c
                 matrix_j[k][j], matrix_j[j][k] = s, -s
-
                 matrix_j_transpored = [[matrix_j[ii][jj] for ii in range(n)] for jj in range(n)]
                 matrix_a = multiply_two_matrices(matrix_j_transpored, matrix_a)
                 matrix_a = multiply_two_matrices(matrix_a, matrix_j)
-    return matrix_a
-
-
-# условие задачи: матрица должна быть квадратной, так как только у квадратных матриц существуют собственные значения
-# a = [[5, 2, -3], [4, 5, -4], [6, 4, -4]]  # l = 1, l = 2, l = 3
-# a = [[5, 1, 2], [1, 5, 2], [2, 2, 6]]  # l = 3.172, l = 8.828, l = 4
-# a = [[5, 1, 2], [1, 6, 2], [2, 2, 7]]  # l = 3.729, l = 4.659, l = 9.612
-
-# a = [[2, 1, 1], [1, 2, 1], [1, 1, 2]]  # l = 4, l = 1, l = 1
-# eps = 1 / 10 ** 3
-# a_qr = qr_algorithm(a, eps)  # для qr-разложения используется процесс Грама-Шмидта
-# a_jak = jakobi_rotation(a, eps)
-
-# print("Исходная матрица:")
-# for elem in a: print(elem)
-# print()
-#
-# ls_qr = []  # собственные значения
-# print("Ответ методом QR:")
-# for i in range(len(a)):
-#     for j in range(len(a)):
-#         if i == j:
-#             l = round(a_qr[i][j], 3)
-#             ls_qr.append(l)
-#             print(f"L_{i + 1} = {l}")
-# for row in a_qr:
-#     print(row)
-# print()
-# ls_jak = []  # собственные значения
-# print("Ответ методом Якоби:")
-# for i in range(len(a)):
-#     for j in range(len(a)):
-#         if i == j:
-#             l = round(a_jak[i][j], 3)
-#             ls_jak.append(l)
-#             print(f"L_{i + 1} = {l}")
-# for row in a_jak:
-#     print(row)
+    eigenvalues = [matrix_a[i][i] for i in range(n)]
+    return eigenvalues
 
 
 def gauss_method(matrix_a, b):
-    """ Метод Гаусса """
+    """
+    Метод Гаусса для любых СЛАУ: несовместных, определённых, неопределённых. Для неопределённых СЛАУ некоторые
+    произвольные неизвестные задаёт = 1 для красоты собственного вектора.
+    """
     n = len(matrix_a)
     for i in range(n):  # объединяем матрицу matrix_a и вектор свободных членов b в расширенную матрицу
         matrix_a[i].append(b[i])
@@ -217,28 +194,25 @@ def gauss_method(matrix_a, b):
             mult = -matrix_a[i][ii] / elem_to_zero  # прибавлять строку, в к-рой есть elem_to_zero, умноженную на mult
             for j in range(n + 1):
                 matrix_a[i][j] += matrix_a[ii][j] * mult
-
-    for row in matrix_a: print(row)
-
-    # определяем совместность и несовместность СЛАУ
+    # определяем совместность или несовместность СЛАУ
     flag_matrix_a = "совместная"
     for i in range(n):
         if all(matrix_a[i][j] == 0 for j in range(n)) and matrix_a[i][n] != 0:
             flag_matrix_a = "несовместная"
             break
     if flag_matrix_a == "несовместная":
-        print("СЛАУ не имеет решений")
-        exit()
-    # если система совместна - её определённость и неопределённость
+        print("СЛАУ не имеет решений")  # но такая ситуация невозможна для задачи, так как для
+        # собственных чисел всегда есть собственный вектор
+        input()  # чтобы консоль не закрылась
+        exit()  # завершение всё программы
+    # если система совместна - её определённость или неопределённость
     flag_matrix_a = "определённая"
     for i in range(n):
         if all(matrix_a[i][j] == 0 for j in range(n)) and matrix_a[i][n] == 0:
             flag_matrix_a = "неопределённая"
             break
-
     vector_column_x = [None] * n
     if flag_matrix_a == "определённая":  # => СЛАУ имеет 1 реш. - начинаем обратный ход: вычисляем значения неизвестных
-        print("СЛАУ имеет одно решение")
         for i in range(n - 1, -1, -1):
             mult = matrix_a[i][i]
             s = 0
@@ -246,26 +220,129 @@ def gauss_method(matrix_a, b):
                 s += matrix_a[i][j] * vector_column_x[j]
             vector_column_x[i] = (matrix_a[i][n] - s) / mult
     else:  # flag_matrix_a == "неопределённая" => СЛАУ имеет бесконечно много решений - обратный ход реализован сложнее
-        print("СЛАУ имеет бесконечно много решений")
-        """
-        ВСПОМНИТЬ ИДЕЮ!!!
-        """
+        # тогда в матрице matrix_a некоторые неизвестные могут определяться однозначно, а некоторые - быть любыми
+        for ii in range(n):  # нужно n итераций, чтобы определить n неизвестных
+            ind_i = None
+            for i in range(n):  # ищем строку, в которой можно определить одно неизвестное x
+                cnt_x_can_define = sum([1 for j in range(n) if (matrix_a[i][j] != 0 and vector_column_x[j] == None)])
+                if cnt_x_can_define == 1:
+                    ind_i = i
+                    break
+            if cnt_x_can_define == 1:  # если нашли такую строку, определяем это неизвестное x однозначно
+                s, ind_j = 0, None
+                for j in range(n):
+                    if matrix_a[ind_i][j] != 0:
+                        if vector_column_x[j] == None:
+                            ind_j = j
+                            mult = matrix_a[ind_i][j]
+                        else:
+                            s += matrix_a[ind_i][j] * vector_column_x[j]
+                vector_column_x[ind_j] = (matrix_a[ind_i][n] - s) / mult
+            else:  # иначе придадим одному неизвестному x произвольное значение, пусть это будет 1 для красоты
+                for j in range(n):
+                    if vector_column_x[j] == None:
+                        vector_column_x[j] = 1  # в след итерации цикла for ii возможно другие неизвестные снова
+                        break  # будут определяться однозначно
     return vector_column_x
 
 
-# A = [
-#     [2 - 4, 1, 1],
-#     [1, 2 - 4, 1],
-#     [1, 1, 2 - 4]
-# ]
-# b = [0, 0, 0]
-# print(gauss_method(A, b))
+def main():
+    # задаём в коде программы матрицу matrix_a, для которой будет решаться задача
+    matrix_a = [
+        [2, 1, 1],
+        [1, 2, 1],
+        [1, 1, 2]
+    ]
+    # вывод матрицы
+    matrix_a_prettytable = prettytable.PrettyTable()
+    matrix_a_prettytable.set_style(prettytable.PLAIN_COLUMNS)  # задаём стиль таблицы без границ полей
+    matrix_a_prettytable.header = False  # убираем верхнюю заголовочную строку
+    for row in matrix_a: matrix_a_prettytable.add_row(row)
+    print("Исходная матрица:")
+    print(matrix_a_prettytable)
+    # проверка матрицы на возможность нахождения собственных значений
+    if len(matrix_a) != len(matrix_a[0]):
+        print("Невозможно решить задачу для данной матрицы:",
+              "собственные числа существуют только у квадратных матриц.",
+              "Измените матрицу в коде программы, если хотите решить задачу.", sep="\n")
+        return
+    # ввод точности от пользователя
+    print("\nВведите точность eps от 10^-10 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
+    # далее информация про min точность и время работы программы
+    while True:
+        try:
+            eps = float(input("eps = "))
+        except ValueError:
+            print("Вы ввели не число - введите ещё раз")
+        else:
+            if not (10**(-10) <= eps <= 10**(-1)):
+                print("Вы ввели число вне диапазона [10^-10; 10^-1] - введите ещё раз")
+            elif str(eps).count('0') != (len(str(eps)) - 2):
+                print("Вы ввели число не в формате [0.0...0[ненулевое число]] - введите ещё раз")
+            else:
+                break
+    eps_signs = len(str(eps)) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
+    # выбор численного метода пользователем
+    print("\nКакой численный метод применить для нахождения собственных чисел?",
+    "1 - QR-алгоритм, 2 - Метод вращений Якоби", sep="\n")
+    while True:
+        try:
+            choice_number_1 = int(input("Введите число 1 или 2: "))
+        except ValueError:
+            print("Вы ввели не число - введите ещё раз")
+        else:
+            if choice_number_1 != 1 and choice_number_1 != 2:
+                print("Вы ввели число, отличное от 1 или 2 - введите ещё раз")
+            else:
+                break
+    # проверка на невозможность применения метода вращений Якоби
+    if choice_number_1 == 2 and not check_matrix_symmetry(matrix_a):
+        print("Метод вращений Якоби применяется только для симметричных матриц.")
+        answer = input("Применить QR-алгоритм? да/нет")
+        if answer.lower() == "да":
+            choice_number_1 = 1
+        else:
+            if answer.lower() == "нет":
+                print("Программа завершена.",
+                      "Измените матрицу в коде программы, если хотите применить метод вращений Якоби",
+                      sep="\n")
+            else:
+                print("Ваш ответ был интерпретирован как отрицательный. Программа завершена."
+                      "Измените матрицу в коде программы, если хотите применить метод вращений Якоби",
+                      sep="\n")
+            return
+    # нахождение собственных значений
+    if choice_number_1 == 1:
+        print("\nКакой подход для QR-разложения применить?",
+              "1 - Процесс Грама-Шмидта, 2 - Поворот Гивенса", sep="\n")
+        while True:
+            try:
+                choice_number_2 = int(input("Введите число 1 или 2: "))
+            except ValueError:
+                print("Вы ввели не число - введите ещё раз")
+            else:
+                if choice_number_2 != 1 and choice_number_2 != 2:
+                    print("Вы ввели число, отличное от 1 или 2 - введите ещё раз")
+                else:
+                    break
+        if choice_number_2 == 1:
+            eigenvalues = qr_algorithm(matrix_a, eps, qr_decomposition_gram_schmidt_process)
+        else:
+            eigenvalues = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
+    else:
+        eigenvalues = jakobi_rotation(matrix_a, eps)
+    print()
+    # вывод собственных значений
+    for i in range(len(eigenvalues)):
+        print(f"L{i + 1} = {eigenvalues[i]:.{eps_signs}f}")
+    # нахождение собственных векторов
+    for e_val in eigenvalues:  # находим собственный вектор для каждого собственного значения
+        matrix_a_slau = matrix_a.copy()  # составляем матрицу для СЛАУ (A - L * E) * x = 0
+        for i in range(len(matrix_gauss)):
+            matrix_gauss[i][i] -= int(e_val)
+        matrix_b_slau = [0] * len(matrix_a_slau)
+        
 
-# ЗАПУСТИТЬ НА ПРИМЕРЕ, ЧТОБЫ ВСПОМНИТЬ ИДЕЮ!!!
-# A = [
-#     [0, 0, 1],
-#     [0, 1, 1],
-#     [0, 1, 1]
-# ]
-# b = [5, 6, 6]
-# print(gauss_method(A, b))
+
+main()
+input()  # чтобы консоль не закрылась
