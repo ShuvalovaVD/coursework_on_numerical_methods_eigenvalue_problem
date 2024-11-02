@@ -202,9 +202,9 @@ def gauss_method(matrix_a, b):
             break
     if flag_matrix_a == "несовместная":
         print("СЛАУ не имеет решений")  # но такая ситуация невозможна для задачи, так как для
-        # собственных чисел всегда есть собственный вектор
+        # собственных значений всегда есть собственный вектор
         input()  # чтобы консоль не закрылась
-        exit()  # завершение всё программы
+        exit()  # завершение всей программы
     # если система совместна - её определённость или неопределённость
     flag_matrix_a = "определённая"
     for i in range(n):
@@ -335,13 +335,21 @@ def main():
     # вывод собственных значений
     for i in range(len(eigenvalues)):
         print(f"L{i + 1} = {eigenvalues[i]:.{eps_signs}f}")
+    print()
     # нахождение собственных векторов
-    for e_val in eigenvalues:  # находим собственный вектор для каждого собственного значения
+    print("Собственные векторы для собственных чисел:")
+    for i in range(len(eigenvalues)):  # находим собственный вектор для каждого собственного значения
+        e_val = eigenvalues[i]
+        # ЗДЕСЬ ЧТО-ТО НЕ ТАК С КОПИЕЙ
         matrix_a_slau = matrix_a.copy()  # составляем матрицу для СЛАУ (A - L * E) * x = 0
-        for i in range(len(matrix_gauss)):
-            matrix_gauss[i][i] -= int(e_val)
+        for ii in range(len(matrix_a_slau)):
+            matrix_a_slau[ii][ii] -= round(e_val)
         matrix_b_slau = [0] * len(matrix_a_slau)
-        
+        eigenvectors = gauss_method(matrix_a_slau, matrix_b_slau)
+        print(f"Для собственного значения L{i + 1} = {e_val:.{eps_signs}f} собственный вектор:")
+        for e_vector in eigenvectors:
+            print(f"{e_vector:.{eps_signs}f}")
+        print()
 
 
 main()
