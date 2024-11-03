@@ -4,7 +4,7 @@ import prettytable
 '''
 ДОДЕЛАТЬ:
 2) написать комментарии для всего кода, где они не написаны
-3) написать всю обёртку
+3) написать всю обёртку - определить пределы точности
 '''
 
 
@@ -41,6 +41,7 @@ def check_matrix_symmetry(matrix_a):
     """
     Вспомогательная функция: проверка матрицы на симметричность.
     """
+    n = len(matrix_a)
     flag = True  # изначально считаем матрицу симметричной
     for i in range(n):
         for j in range(n):
@@ -134,8 +135,8 @@ def qr_decomposition_givens_turn(matrix_a):  # !!!
 def qr_algorithm(matrix_a, eps, qr_decomposition):  # !!!
     """Функция осуществляет QR-алгоритм"""
     n = len(matrix_a)
-    iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
-    for iter in range(iters):
+    # iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
+    while True:
         matrix_q, matrix_r = qr_decomposition(matrix_a)
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
@@ -266,22 +267,24 @@ def main():
               "собственные числа существуют только у квадратных матриц.",
               "Измените матрицу в коде программы, если хотите решить задачу.", sep="\n")
         return
+    n = len(matrix_a)  # размер квадратной матрицы
     # ввод точности от пользователя
-    print("\nВведите точность eps от 10^-10 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
+    print("\nВведите точность eps от 10^-30 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
     # далее информация про min точность и время работы программы
     while True:
         try:
-            eps = float(input("eps = "))
+            eps_str = input("eps = ")
+            eps = float(eps_str)
         except ValueError:
             print("Вы ввели не число - введите ещё раз")
         else:
-            if not (10**(-10) <= eps <= 10**(-1)):
-                print("Вы ввели число вне диапазона [10^-10; 10^-1] - введите ещё раз")
-            elif str(eps).count('0') != (len(str(eps)) - 2):
+            if not (10**(-30) <= eps <= 10**(-1)):
+                print("Вы ввели число вне диапазона [10^-30; 10^-1] - введите ещё раз")
+            elif eps_str.count('0') != (len(eps_str) - 2):
                 print("Вы ввели число не в формате [0.0...0[ненулевое число]] - введите ещё раз")
             else:
                 break
-    eps_signs = len(str(eps)) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
+    eps_signs = len(eps_str) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
     # выбор численного метода пользователем
     print("\nКакой численный метод применить для нахождения собственных чисел?",
     "1 - QR-алгоритм, 2 - Метод вращений Якоби", sep="\n")
@@ -333,17 +336,28 @@ def main():
         eigenvalues = jakobi_rotation(matrix_a, eps)
     print()
     # вывод собственных значений
-    for i in range(len(eigenvalues)):
+    print("Собственные значения:")
+    print()
+    print("Чистые значения:")
+    for i in range(n):
         print(f"L{i + 1} = {eigenvalues[i]:.{eps_signs}f}")
+    print()
+    print("Грязные значения:")
+    for i in range(n):
+        print(f"L{i + 1} = {eigenvalues[i]:.{30}f}")
     print()
     # нахождение собственных векторов
     print("Собственные векторы для собственных чисел:")
-    for i in range(len(eigenvalues)):  # находим собственный вектор для каждого собственного значения
+    for i in range(n):  # находим собственный вектор для каждого собственного значения
         e_val = eigenvalues[i]
         # ЗДЕСЬ ЧТО-ТО НЕ ТАК С КОПИЕЙ
-        matrix_a_slau = matrix_a.copy()  # составляем матрицу для СЛАУ (A - L * E) * x = 0
-        for ii in range(len(matrix_a_slau)):
-            matrix_a_slau[ii][ii] -= round(e_val)
+        matrix_a_slau = []  # составляем матрицу для СЛАУ (A - L * E) * x = 0
+        for ii in range(n):
+            matrix_a_slau.append([0] * n)
+            for jj in range(n):
+                matrix_a_slau[ii][jj] = matrix_a[ii][jj]
+                if ii == jj:
+                    matrix_a_slau[ii][jj] -= round(e_val)
         matrix_b_slau = [0] * len(matrix_a_slau)
         eigenvectors = gauss_method(matrix_a_slau, matrix_b_slau)
         print(f"Для собственного значения L{i + 1} = {e_val:.{eps_signs}f} собственный вектор:")
