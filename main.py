@@ -1,11 +1,11 @@
-import math
+"""
+Решение проблемы собственных значений с помощью численных методов: QR-алгоритм и метод вращений Якоби. QR-алгоритм
+использует QR-разложение, которое реализовано двумя подходами: процессом Грама-Шмидта и поворотом Гивенса.
+Для найденных собственных значений производится поиск соответствующих им собственных векторов с помощью метода Гаусса.
+"""
+import math  # входит в стандартную библиотеку
 import numpy as np  # нужно для вычисления обратной матрицы
-import prettytable
-'''
-ДОДЕЛАТЬ:
-2) написать комментарии для всего кода, где они не написаны
-3) написать всю обёртку - определить пределы точности
-'''
+import prettytable  # нужно для красивого вывода матрицы
 
 
 def sign(x):
@@ -108,51 +108,66 @@ def qr_decomposition_gram_schmidt_process(matrix_a):
     return matrix_q, matrix_r
 
 
-def qr_decomposition_givens_turn(matrix_a):  # !!!
+def qr_decomposition_givens_turn(matrix_a):
+    """
+    Функция осуществляет QR-разложение вещественной матрицы matrix_a на ортогональную матрицу matrix_q
+    и верхнетреугольную матрицу matrix_r: matrix_a = matrix_q * matrix_r. Для реализации QR-разложения используется
+    поворот Гивенса. Далее в комментариях будет описан ход этого процесса.
+    """
     n = len(matrix_a)
-    matrix_r = matrix_a.copy()
-    g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
-    for j in range(n):
-        for i in range(j + 1, n):
-            a_j, a_i = matrix_r[j][j], matrix_r[i][j]
-            c = a_j / ((a_j ** 2 + a_i ** 2) ** 0.5)
-            s = (-a_i) / ((a_j ** 2 + a_i ** 2) ** 0.5)
-            g[j][j] = g[i][i] = c
-            g[i][j], g[j][i] = s, -s
-            matrix_r = multiply_two_matrices(g, matrix_r)
-            g[j][j] = g[i][i] = 1
+    matrix_r = matrix_a.copy()  # матрица matrix_r будет постепенно формироваться путем умножений исходной матрицы
+    # matrix_a на матрицу Гивенса g - такое умножение g * matrix_r называется поворотом Гивенса
+    g = [[1 if i == j else 0 for j in range(n)] for i in range(n)]  # g - это единичная матрица E, но: (см. ниже цикл)
+    # чтобы привести matrix_r к верхнетреугольному виду, нужно обнулять эл-ты под главной диагональю
+    for j in range(n):  # в столбце j
+        for i in range(j + 1, n):  # будем обнулять элементы a_i под эл-том a_j на главной диагонали в этом столбце
+            a_j, a_i = matrix_r[j][j], matrix_r[i][j]  # a_j - опорный эл-т, a_i - обнуляемый эл-т
+            c = a_j / ((a_j ** 2 + a_i ** 2) ** 0.5)  # для этого найдём косинус c
+            s = (-a_i) / ((a_j ** 2 + a_i ** 2) ** 0.5)  # и синус s
+            g[j][j] = g[i][i] = c  # на координатах (i; i) и (j; j) в матрице Гивенса стоит косинус c
+            g[i][j], g[j][i] = s, -s  # на координатах (i; j) и (j; i) стоят синусы s: s и -s соответственно
+            matrix_r = multiply_two_matrices(g, matrix_r)  # поворот Гивенса: обнуляем эл-т a_i в i строке j столбце
+            g[j][j] = g[i][i] = 1  # возвращаем g к виду единичной матрицы, так как для след эл-та g будет другая
             g[i][j] = g[j][i] = 0
     # найдем ортогональную матрицу matrix_q из выражения matrix_a = matrix_q * matrix_r
     # умножим обе части этого уравнения на matrix_r ** (-1) справа
     # тгд: matrix_a * matrix_r ** (-1) = matrix_q * matrix_r * matrix_r ** (-1)
     # учитывая, что: matrix_r * matrix_r ** (-1) = E, где E - единичная матрица => matrix_q * E = matrix_q
     # получаем: matrix_q = matrix_a * matrix_r ** (-1), тгд требуется найти обратную матрицу matrix_r ** (-1)
-    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()
+    matrix_r_inv = np.linalg.inv(np.array(matrix_r)).tolist()  # обратная матрица matrix_r ** (-1)
     matrix_q = multiply_two_matrices(matrix_a, matrix_r_inv)
     return matrix_q, matrix_r
 
 
-def qr_algorithm(matrix_a, eps, qr_decomposition):  # !!!
-    """Функция осуществляет QR-алгоритм"""
+def qr_algorithm(matrix_a, eps, qr_decomposition):
+    """
+    Функция осуществляет QR-алгоритм для нахождения собственных значений: преобразует исходную матрицу matrix_a
+    в верхнетреугольную путем применения QR-разложения на каждой итерации. В качестве QR-разложения используется то,
+    которое передано - qr_decomposition. Далее в комментариях будет описан ход этого алгоритма.
+    """
     n = len(matrix_a)
-    # iters = 1000  # ? подобрать кол-во итераций, оценив сложность алгоритма
-    while True:
-        matrix_q, matrix_r = qr_decomposition(matrix_a)
-        matrix_a = multiply_two_matrices(matrix_r, matrix_q)
-        if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:
-            break
-    eigenvalues = [matrix_a[i][i] for i in range(n)]
+    while True:  # можно также задавать количество итераций
+        matrix_q, matrix_r = qr_decomposition(matrix_a)  # QR-разложение: matrix_a = matrix_q * matrix_r
+        matrix_a = multiply_two_matrices(matrix_r, matrix_q)  # матрица matrix_a меняется
+        if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:  # завершается, когда max по abs
+            break  # эл-т среди эл-тов под главной диагональю близок к 0, то есть меньше заданной точности eps
+    eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
     return eigenvalues
 
 
-def jakobi_rotation(matrix_a, eps):  # !!!
+def jakobi_rotation(matrix_a, eps):
+    """
+    Функция осуществляет метод вращений Якоби для нахождения собственных значений: преобразует исходную матрицу matrix_a
+    в диагональную. Предполагается, что матрица симметричная. Далее в комментариях будет описан ход этого алгоритма.
+    """
     n = len(matrix_a)
-    while max([abs(matrix_a[i][j]) for i in range(n) for j in range(n) if i != j]) >= eps:
-        for j in range(n - 1):
-            for k in range(j + 1, n):
-                if abs(matrix_a[j][k]) < eps:
+    # выполняем, пока max по abs эл-т среди внедиагональных эл-тов не достиг 0, то есть больше заданной точности eps
+    while max([abs(matrix_a[ii][jj]) for ii in range(n) for jj in range(n) if ii != jj]) >= eps:
+        for j in range(n - 1):  # matrix_a[j][j] - опорный эл-т, нет смысла брать опорным правый нижний
+            for k in range(j + 1, n):  #  для него стремимся обнулить симметричные эл-ты matrix_a[k][j] и matrix_a[j][k]
+                if abs(matrix_a[j][k]) < eps:  # т. к. они симметричны, достаточно проверки одного
                     continue
-                # составим матрицу вращения matrix_j
+                # составим матрицу вращения matrix_j по ф-лам ниже
                 if matrix_a[j][j] == matrix_a[k][k]:
                     theta = math.pi / 4
                     c = math.cos(theta)
@@ -162,20 +177,24 @@ def jakobi_rotation(matrix_a, eps):  # !!!
                     t = sign(tau) / (abs(tau) + (1 + tau ** 2) ** 0.5)
                     c = 1 / ((1 + t ** 2) ** 0.5)
                     s = t * c
-                matrix_j = [[1 if ii == jj else 0 for jj in range(n)] for ii in range(n)]
+                matrix_j = [[1 if ii == jj else 0 for jj in range(n)] for ii in range(n)]  # это E, но: (см. ниже)
                 matrix_j[j][j] = matrix_j[k][k] = c
                 matrix_j[k][j], matrix_j[j][k] = s, -s
+                # составим транспонированную матрицу вращения matrix_j_transpored
                 matrix_j_transpored = [[matrix_j[ii][jj] for ii in range(n)] for jj in range(n)]
+                # происходит двустороннее вращение: matrix_a = matrix_j * matrix_a * matrix_j_transpored
                 matrix_a = multiply_two_matrices(matrix_j_transpored, matrix_a)
                 matrix_a = multiply_two_matrices(matrix_a, matrix_j)
-    eigenvalues = [matrix_a[i][i] for i in range(n)]
+                # благодаря которому эл-ты эл-ты matrix_a[k][j] и matrix_a[j][k] уменьшаются, но они могут не обнулиться
+                # за 1 итерацию, поэтому нужен внешний цикл while
+    eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
     return eigenvalues
 
 
 def gauss_method(matrix_a, b):
     """
-    Метод Гаусса для любых СЛАУ: несовместных, определённых, неопределённых. Для неопределённых СЛАУ некоторые
-    произвольные неизвестные задаёт = 1 для красоты собственного вектора.
+    Функция осуществляет метод Гаусса для любых СЛАУ: несовместных, определённых, неопределённых. Для неопределённых
+    СЛАУ некоторые произвольные неизвестные задаёт = 1 для красоты собственного вектора.
     """
     n = len(matrix_a)
     for i in range(n):  # объединяем матрицу matrix_a и вектор свободных членов b в расширенную матрицу
@@ -248,6 +267,10 @@ def gauss_method(matrix_a, b):
 
 
 def main():
+    """
+    Главная функция: задаёт матрицу и вводит точность от пользователя, затем для этих данных решается задача нахождения
+    собственных значений и соответствующих им собственных векторов.
+    """
     # задаём в коде программы матрицу matrix_a, для которой будет решаться задача
     matrix_a = [
         [2, 1, 1],
@@ -264,13 +287,13 @@ def main():
     # проверка матрицы на возможность нахождения собственных значений
     if len(matrix_a) != len(matrix_a[0]):
         print("Невозможно решить задачу для данной матрицы:",
-              "собственные числа существуют только у квадратных матриц.",
+              "собственные значения существуют только у квадратных матриц.",
               "Измените матрицу в коде программы, если хотите решить задачу.", sep="\n")
         return
     n = len(matrix_a)  # размер квадратной матрицы
     # ввод точности от пользователя
-    print("\nВведите точность eps от 10^-30 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
-    # далее информация про min точность и время работы программы
+    print("\nВведите точность eps от 10^-14 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
+    print("Для точности eps < 10^-14 решение задачи невозможно в силу ограниченных вычислительных возможностей Python.")
     while True:
         try:
             eps_str = input("eps = ")
@@ -278,15 +301,15 @@ def main():
         except ValueError:
             print("Вы ввели не число - введите ещё раз")
         else:
-            if not (10**(-30) <= eps <= 10**(-1)):
-                print("Вы ввели число вне диапазона [10^-30; 10^-1] - введите ещё раз")
+            if not (10**(-14) <= eps <= 10**(-1)):
+                print("Вы ввели число вне диапазона [10^-14; 10^-1] - введите ещё раз")
             elif eps_str.count('0') != (len(eps_str) - 2):
                 print("Вы ввели число не в формате [0.0...0[ненулевое число]] - введите ещё раз")
             else:
                 break
     eps_signs = len(eps_str) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
     # выбор численного метода пользователем
-    print("\nКакой численный метод применить для нахождения собственных чисел?",
+    print("\nКакой численный метод применить для нахождения собственных значений?",
     "1 - QR-алгоритм, 2 - Метод вращений Якоби", sep="\n")
     while True:
         try:
@@ -347,10 +370,9 @@ def main():
         print(f"L{i + 1} = {eigenvalues[i]:.{30}f}")
     print()
     # нахождение собственных векторов
-    print("Собственные векторы для собственных чисел:")
+    print("Собственные векторы для собственных значений:")
     for i in range(n):  # находим собственный вектор для каждого собственного значения
         e_val = eigenvalues[i]
-        # ЗДЕСЬ ЧТО-ТО НЕ ТАК С КОПИЕЙ
         matrix_a_slau = []  # составляем матрицу для СЛАУ (A - L * E) * x = 0
         for ii in range(n):
             matrix_a_slau.append([0] * n)
@@ -358,7 +380,7 @@ def main():
                 matrix_a_slau[ii][jj] = matrix_a[ii][jj]
                 if ii == jj:
                     matrix_a_slau[ii][jj] -= round(e_val)
-        matrix_b_slau = [0] * len(matrix_a_slau)
+        matrix_b_slau = [0] * n
         eigenvectors = gauss_method(matrix_a_slau, matrix_b_slau)
         print(f"Для собственного значения L{i + 1} = {e_val:.{eps_signs}f} собственный вектор:")
         for e_vector in eigenvectors:
