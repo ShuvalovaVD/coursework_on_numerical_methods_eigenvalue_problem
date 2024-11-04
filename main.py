@@ -315,7 +315,7 @@ def main():
         try:
             choice_number_1 = int(input("Введите число 1 или 2: "))
         except ValueError:
-            print("Вы ввели не число - введите ещё раз")
+            print("Вы ввели не целое число - введите ещё раз")
         else:
             if choice_number_1 != 1 and choice_number_1 != 2:
                 print("Вы ввели число, отличное от 1 или 2 - введите ещё раз")
@@ -345,7 +345,7 @@ def main():
             try:
                 choice_number_2 = int(input("Введите число 1 или 2: "))
             except ValueError:
-                print("Вы ввели не число - введите ещё раз")
+                print("Вы ввели не целое число - введите ещё раз")
             else:
                 if choice_number_2 != 1 and choice_number_2 != 2:
                     print("Вы ввели число, отличное от 1 или 2 - введите ещё раз")
