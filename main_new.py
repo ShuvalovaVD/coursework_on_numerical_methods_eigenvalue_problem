@@ -275,21 +275,25 @@ def main():
     for row in matrix_a: matrix_a_prettytable.add_row(row)
     print("Исходная матрица:")
     print(matrix_a_prettytable)
+    print()
     n = len(matrix_a)  # размер квадратной матрицы
     # ввод точности от пользователя
-    print("\nВведите точность eps от 10^-14 до 10^-1 в формате [0.0...0[ненулевое число]], например: eps = 0.001")
-    print("Для точности eps < 10^-14 решение задачи невозможно в силу ограниченных вычислительных возможностей Python.")
+    print("Введите точность eps от 10^-14 до 10^-1", "в формате [0.0...0[ненулевое число]],",
+          "например: eps = 0.001", sep="\n", end="\n\n")
+    print("Для точности eps < 10^-14", "решение задачи невозможно в силу",
+          "ограниченных вычислительных возможностей Python.", sep="\n", end="\n\n")
     while True:
         try:
             eps_str = input("eps = ")
             eps = float(eps_str)
         except ValueError:
-            print("Вы ввели не число - введите ещё раз")
+            print("\nВы ввели не число или использовали запятую.", "Введите ещё раз:", sep="\n", end="\n\n")
         else:
             if not (10**(-14) <= eps <= 10**(-1)):
-                print("Вы ввели число вне диапазона [10^-14; 10^-1] - введите ещё раз")
-            elif eps_str.count('0') != (len(eps_str) - 2):
-                print("Вы ввели число не в формате [0.0...0[ненулевое число]] - введите ещё раз")
+                print("\nВы ввели число вне диапазона [10^-14; 10^-1].", "Введите ещё раз:", sep="\n", end="\n\n")
+            elif eps_str.count('0') != (len(eps_str) - 2) or eps_str[-1] == "0":
+                print("\nВы ввели число не в формате [0.0...0[ненулевое число]].",
+                      "Введите ещё раз:", sep="\n", end="\n\n")
             else:
                 break
     eps_signs = len(eps_str) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
@@ -299,20 +303,20 @@ def main():
     eigenvalues_qr_givens_turn = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
     eigenvalues_jakobi_rotation = jakobi_rotation(matrix_a, eps)
     # вывод собственных значений
-    print("Собственные значения, найденные QR-алгоритмом для QR-разложения по процессу Грама-Шмидта:")
+    print("Собственные значения,", "найденные QR-алгоритмом для QR-разложения", "по процессу Грама-Шмидта:", sep="\n")
     for i in range(n):
         print(f"L{i + 1} = {eigenvalues_qr_gram_schmidt_process[i]:.{eps_signs}f}")
     print()
-    print("Собственные значения, найденные QR-алгоритмом для QR-разложения по повороту Гивенса:")
+    print("Собственные значения,", "найденные QR-алгоритмом для QR-разложения", "по повороту Гивенса:", sep="\n")
     for i in range(n):
         print(f"L{i + 1} = {eigenvalues_qr_givens_turn[i]:.{eps_signs}f}")
     print()
-    print("Собственные значения, найденные методом вращений Якоби:")
+    print("Собственные значения,", "найденные методом вращений Якоби:", sep="\n")
     for i in range(n):
         print(f"L{i + 1} = {eigenvalues_jakobi_rotation[i]:.{eps_signs}f}")
     print()
     # нахождение собственных векторов
-    print("Собственные векторы для собственных значений:")  # возьмём собственные значения eigenvalues_jakobi_rotation
+    print("Собственные векторы:\n")  # возьмём собственные значения eigenvalues_jakobi_rotation
     for i in range(n):  # находим собственный вектор для каждого собственного значения
         e_val = eigenvalues_jakobi_rotation[i]
         matrix_a_slau = []  # составляем матрицу для СЛАУ (A - L * E) * x = 0
@@ -324,7 +328,7 @@ def main():
                     matrix_a_slau[ii][jj] -= round(e_val)
         matrix_b_slau = [0] * n
         eigenvectors = gauss_method(matrix_a_slau, matrix_b_slau)
-        print(f"Для собственного значения L{i + 1} = {e_val:.{eps_signs}f} собственный вектор:")
+        print(f"для собственного значения L{i + 1} = {e_val:.{eps_signs}f}:")
         for e_vector in eigenvectors:
             print(f"{e_vector:.{eps_signs}f}")
         print()
