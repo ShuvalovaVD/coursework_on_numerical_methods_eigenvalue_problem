@@ -344,19 +344,14 @@ def main():
         for e_vector in eigenvectors:
             print(f"{e_vector:.{eps_signs}f}")
         print()
-    # вывод таблицы сравнения времени работы алгоритмов
-    print("Время работы алгоритмов в секундах:")
-    time_table = prettytable.PrettyTable()
-    time_table.field_names = ["QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
-    time_table.add_row([f"{t2-t1:.10f}", f"{t3-t2:.10f}", f"{t4-t3:.10f}"])
-    print(time_table)
-    print()
-    # вывод таблицы сравнения количества внешних итераций алгоритмов
-    print("Количество внешних итераций алгоритмов:")
-    iters_table = prettytable.PrettyTable()
-    iters_table.field_names = ["QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
-    iters_table.add_row([cnt_iters_qr_gram_schmidt_process, cnt_iters_qr_givens_turn, cnt_iters_jacobi_rotation])
-    print(iters_table)
+    # вывод сравнительной таблицы - по времени и кол-ву итераций
+    print("Сравнительная таблица:")
+    comparison_table = prettytable.PrettyTable()
+    comparison_table.field_names = ["Критерий сравнения", "QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
+    comparison_table.add_row(["Время в секундах", f"{t2-t1:.10f}", f"{t3-t2:.10f}", f"{t4-t3:.10f}"])
+    comparison_table.add_row(["Кол-во итераций", cnt_iters_qr_gram_schmidt_process, cnt_iters_qr_givens_turn,
+                         cnt_iters_jacobi_rotation])
+    print(comparison_table)
 
 
 main()
