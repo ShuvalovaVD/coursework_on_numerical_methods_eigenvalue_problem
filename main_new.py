@@ -142,7 +142,6 @@ def qr_algorithm(matrix_a, eps, qr_decomposition):
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:  # завершается, когда max по abs
             break  # эл-т среди эл-тов под главной диагональю близок к 0, то есть меньше заданной точности eps
     eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
-    print("QR - iters:", cnt_iters)
     return cnt_iters, eigenvalues
 
 
@@ -181,7 +180,6 @@ def jacobi_rotation(matrix_a, eps):
                 # за 1 итерацию, поэтому нужен внешний цикл while
         cnt_iters += 1
     eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
-    print("Якоби - iters:", cnt_iters)
     return cnt_iters, eigenvalues
 
 
