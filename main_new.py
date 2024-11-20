@@ -6,6 +6,7 @@
 import math  # входит в стандартную библиотеку
 import numpy as np  # нужно для вычисления обратной матрицы
 import prettytable  # нужно для красивого вывода матрицы
+import time  # нужно для засечения времени работы алгоритмов
 
 
 def sign(x):
@@ -297,10 +298,14 @@ def main():
                 break
     eps_signs = len(eps_str) - 2  # столько знаков после точки надо будет оставлять при выводе ответов
     print()
-    # нахождение собственных значений
+    # нахождение собственных значений и засечение времени работы алгоритмов
+    t1 = time.time()
     eigenvalues_qr_gram_schmidt_process = qr_algorithm(matrix_a, eps, qr_decomposition_gram_schmidt_process)
+    t2 = time.time()
     eigenvalues_qr_givens_turn = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
+    t3 = time.time()
     eigenvalues_jacobi_rotation = jacobi_rotation(matrix_a, eps)
+    t4 = time.time()
     # вывод собственных значений
     print("Собственные значения,", "найденные QR-алгоритмом для QR-разложения", "по процессу Грама-Шмидта:", sep="\n")
     for i in range(n):
@@ -331,6 +336,12 @@ def main():
         for e_vector in eigenvectors:
             print(f"{e_vector:.{eps_signs}f}")
         print()
+    # вывод таблицы сравнения времени работы алгоритмов
+    print("Время работы алгоритмов в секундах:")
+    time_table = prettytable.PrettyTable()
+    time_table.field_names = ["QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
+    time_table.add_row([f"{t2-t1:.10f}", f"{t3-t2:.10f}", f"{t4-t3:.10f}"])
+    print(time_table)
 
 
 main()
