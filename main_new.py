@@ -134,13 +134,16 @@ def qr_algorithm(matrix_a, eps, qr_decomposition):
     которое передано - qr_decomposition. Далее в комментариях будет описан ход этого алгоритма.
     """
     n = len(matrix_a)
+    cnt_iters = 0
     while True:  # можно также задавать количество итераций
         matrix_q, matrix_r = qr_decomposition(matrix_a)  # QR-разложение: matrix_a = matrix_q * matrix_r
         matrix_a = multiply_two_matrices(matrix_r, matrix_q)  # матрица matrix_a меняется
+        cnt_iters += 1
         if max([abs(matrix_a[i][j]) for j in range(n) for i in range(j + 1, n)]) < eps:  # завершается, когда max по abs
             break  # эл-т среди эл-тов под главной диагональю близок к 0, то есть меньше заданной точности eps
     eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
-    return eigenvalues
+    print("QR - iters:", cnt_iters)
+    return cnt_iters, eigenvalues
 
 
 def jacobi_rotation(matrix_a, eps):
@@ -149,6 +152,7 @@ def jacobi_rotation(matrix_a, eps):
     в диагональную. Предполагается, что матрица симметричная. Далее в комментариях будет описан ход этого алгоритма.
     """
     n = len(matrix_a)
+    cnt_iters = 0
     # выполняем, пока max по abs эл-т среди внедиагональных эл-тов не достиг 0, то есть больше заданной точности eps
     while max([abs(matrix_a[ii][jj]) for ii in range(n) for jj in range(n) if ii != jj]) >= eps:
         for j in range(n - 1):  # matrix_a[j][j] - опорный эл-т, нет смысла брать опорным правый нижний
@@ -175,8 +179,10 @@ def jacobi_rotation(matrix_a, eps):
                 matrix_a = multiply_two_matrices(matrix_a, matrix_j)
                 # благодаря которому эл-ты эл-ты matrix_a[k][j] и matrix_a[j][k] уменьшаются, но они могут не обнулиться
                 # за 1 итерацию, поэтому нужен внешний цикл while
+        cnt_iters += 1
     eigenvalues = [matrix_a[i][i] for i in range(n)]  # собственные значения находятся на главной диагонали
-    return eigenvalues
+    print("Якоби - iters:", cnt_iters)
+    return cnt_iters, eigenvalues
 
 
 def gauss_method(matrix_a, b):
@@ -301,11 +307,12 @@ def main():
     print()
     # нахождение собственных значений и засечение времени работы алгоритмов
     t1 = time.time()
-    eigenvalues_qr_gram_schmidt_process = qr_algorithm(matrix_a, eps, qr_decomposition_gram_schmidt_process)
+    cnt_iters_qr_gram_schmidt_process, eigenvalues_qr_gram_schmidt_process = qr_algorithm(matrix_a, eps,
+                                                                                qr_decomposition_gram_schmidt_process)
     t2 = time.time()
-    eigenvalues_qr_givens_turn = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
+    cnt_iters_qr_givens_turn, eigenvalues_qr_givens_turn = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
     t3 = time.time()
-    eigenvalues_jacobi_rotation = jacobi_rotation(matrix_a, eps)
+    cnt_iters_jacobi_rotation, eigenvalues_jacobi_rotation = jacobi_rotation(matrix_a, eps)
     t4 = time.time()
     # вывод собственных значений
     print("Собственные значения,", "найденные QR-алгоритмом для QR-разложения", "по процессу Грама-Шмидта:", sep="\n")
@@ -343,6 +350,13 @@ def main():
     time_table.field_names = ["QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
     time_table.add_row([f"{t2-t1:.10f}", f"{t3-t2:.10f}", f"{t4-t3:.10f}"])
     print(time_table)
+    print()
+    # вывод таблицы сравнения количества внешних итераций алгоритмов
+    print("Количество внешних итераций алгоритмов:")
+    iters_table = prettytable.PrettyTable()
+    iters_table.field_names = ["QR - Грамм-Шмидт", "QR - Гивенс", "М. вр. Якоби"]
+    iters_table.add_row([cnt_iters_qr_gram_schmidt_process, cnt_iters_qr_givens_turn, cnt_iters_jacobi_rotation])
+    print(iters_table)
 
 
 main()
