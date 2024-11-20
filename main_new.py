@@ -1,4 +1,3 @@
-
 """
 Решение проблемы собственных значений с помощью численных методов: QR-алгоритм и метод вращений Якоби. QR-алгоритм
 использует QR-разложение, которое реализовано двумя подходами: процессом Грама-Шмидта и поворотом Гивенса.
@@ -142,7 +141,7 @@ def qr_algorithm(matrix_a, eps, qr_decomposition):
     return eigenvalues
 
 
-def jakobi_rotation(matrix_a, eps):
+def jacobi_rotation(matrix_a, eps):
     """
     Функция осуществляет метод вращений Якоби для нахождения собственных значений: преобразует исходную матрицу matrix_a
     в диагональную. Предполагается, что матрица симметричная. Далее в комментариях будет описан ход этого алгоритма.
@@ -301,7 +300,7 @@ def main():
     # нахождение собственных значений
     eigenvalues_qr_gram_schmidt_process = qr_algorithm(matrix_a, eps, qr_decomposition_gram_schmidt_process)
     eigenvalues_qr_givens_turn = qr_algorithm(matrix_a, eps, qr_decomposition_givens_turn)
-    eigenvalues_jakobi_rotation = jakobi_rotation(matrix_a, eps)
+    eigenvalues_jacobi_rotation = jacobi_rotation(matrix_a, eps)
     # вывод собственных значений
     print("Собственные значения,", "найденные QR-алгоритмом для QR-разложения", "по процессу Грама-Шмидта:", sep="\n")
     for i in range(n):
@@ -313,12 +312,12 @@ def main():
     print()
     print("Собственные значения,", "найденные методом вращений Якоби:", sep="\n")
     for i in range(n):
-        print(f"L{i + 1} = {eigenvalues_jakobi_rotation[i]:.{eps_signs}f}")
+        print(f"L{i + 1} = {eigenvalues_jacobi_rotation[i]:.{eps_signs}f}")
     print()
     # нахождение собственных векторов
-    print("Собственные векторы:\n")  # возьмём собственные значения eigenvalues_jakobi_rotation
+    print("Собственные векторы:\n")  # возьмём собственные значения eigenvalues_jacobi_rotation
     for i in range(n):  # находим собственный вектор для каждого собственного значения
-        e_val = eigenvalues_jakobi_rotation[i]
+        e_val = eigenvalues_jacobi_rotation[i]
         matrix_a_slau = []  # составляем матрицу для СЛАУ (A - L * E) * x = 0
         for ii in range(n):
             matrix_a_slau.append([0] * n)
