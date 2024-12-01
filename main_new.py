@@ -273,14 +273,6 @@ def main():
         [1, 1, 1, 1, 2]
     ]
     # гарантируется, что матрица matrix_a удовлетворяет всем условиям применения методов
-    # вывод матрицы
-    matrix_a_prettytable = prettytable.PrettyTable()
-    matrix_a_prettytable.set_style(prettytable.PLAIN_COLUMNS)  # задаём стиль таблицы без границ полей
-    matrix_a_prettytable.header = False  # убираем верхнюю заголовочную строку
-    for row in matrix_a: matrix_a_prettytable.add_row(row)
-    print("Исходная матрица:")
-    print(matrix_a_prettytable)
-    print()
     n = len(matrix_a)  # размер квадратной матрицы
     # ввод точности от пользователя
     print("Введите точность eps от 10^-14 до 10^-1", "в формате [0.0...0[ненулевое число]],",
